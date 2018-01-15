@@ -20,7 +20,8 @@ by filling a form available on the ESP8266.
     - [STM32 firmware](#stm32-firmware)
     	- [Creating a project](#creating-a-project)
     	- [Writing program](#writing-a-program)
-    	- [Flashing target](#writing a program)
+    	- [Flashing target](#flashing-target)
+    - [NodeMCU firmware](#nodemcu-firmware)
     - [Project description](#project-description)
     - [Connection](#connection)
 
@@ -154,6 +155,43 @@ application as an `AC6 STM32 C/C++ Application`.
 
 > The target board must be connected with USB cable to ST-Link
 
+## NodeMCU firmware
+
+Firmware was installed on NodeMCU using simple program which is called
+ESP8266Flasher. All what we need to do is a connect device to computer, choice
+appropriate port and choose bin file containing firmware. When new firmware is
+installed on device program, program send confirmation message to user.
+Now NodeMCU is ready for operation.
+
+The essential multiplatforms tools for any ESP8266 developer is ESPlorer,
+which also support all AT commands. Program requires Java SE ver. 7 or above.
+When the device boots, firmware looking for file init.lua which is main file
+to be run after reset or power connection, because it is a part of the boot
+sequence (standard lua feature). When file cannot be opened to the serial
+console is printed `lua:cannot open init.lua`. Usually this file contains
+configuration of wifi connection and only continue once that has been
+successful.
+
+Example configuration may looks as follows:
+
+```
+wifi.setmode(wifi.STATION)
+station_cfg={}
+station_cfg.ssid="xxx"
+station_cfg.pwd="xxx"
+wifi.sta.config(station_cfg)
+wifi.sta.connect()
+wifi.sta.setip({
+ip = "192.168.0.52",
+netmask = "255.255.255.0",
+gateway = "192.168.0.1"
+})
+```
+
+After successfully connect to wifi AP program is able to continue. By using
+dofile(“filename.lua”) program can open any lua file which is located in memory.
+
+
 ## Project description
 
 The STM32 NucleoF302R8 is responsible for collecting measurements, sending them
@@ -227,8 +265,12 @@ available to be changed are:
 
 ![Flowchart.png](UML/flowchart.png)
 
-<!-- TODO: describe ESP8266 application -->
-
+NodeMCU Esp8266 is responsible for sending measurement data receiving from STM32
+to `http://alfa.smartstorm.io` and control of frequency measurements by using
+simple html form which is hosted by device. User can demand from STM from one
+to max four measurements per minute or request an immediate measurement. After
+receiving data from STM, device send POST request with data to smartstorm-api
+where measurements are presented on charts.
 
 ## Connection
 
