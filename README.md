@@ -223,7 +223,7 @@ available to be changed are:
 - frequency - 1/2/3/4 measurements per minute
 - immediate measurement request
 
-The flowchart of the microcontroller program:
+    The flowchart of the microcontroller program:
 
 ![Flowchart.png](UML/flowchart.png)
 
@@ -231,3 +231,5 @@ The flowchart of the microcontroller program:
 
 
 ## Connection
+
+![Connection](UML/schematics.png)
