@@ -41,8 +41,8 @@
 #include "stm32f3xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-#include "si7021.h"
 #include "crc8.h"
+#include "si7021.h"
 #include "math.h"
 #define ADC_RESISTANCE	10000.0
 #define B_COEFF	6.7107
@@ -62,6 +62,7 @@ uint8_t temperature[3], humidity[3];
 uint16_t light, length;
 uint8_t tx_buffer[50], rx_buffer[50];
 uint8_t checksum, adc_ready;
+int freq,immediate,normal;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -92,6 +93,35 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
 	HAL_ADC_Stop_IT(hadc);
 	adc_ready = 1;
 }
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	int measure_freq;
+
+	sscanf((char *)rx_buffer,"freq:%dimmed:%dnormal:%d", &measure_freq, &immediate, &normal);
+
+	if(immediate == 1) {
+		SI7021_Read_Temperature_Hold(temperature, 1);
+		checksum = Crc8_Calculate(temperature, 2, 0);
+
+		SI7021_Read_Humidity_Hold(humidity, 1);
+		checksum = Crc8_Calculate(humidity, 2, 0);
+
+		length = sprintf((char *) tx_buffer, "Temp:%04.2fHum:%02dLight:%08.2f",
+							convertToCelsius(temperature),
+							convertToRH(humidity),
+							convertToLux(light));
+
+		HAL_UART_Transmit(huart, tx_buffer, length, 50);
+	}
+
+	if(normal == 1) {
+		freq = measure_freq;
+	}
+
+	HAL_UART_Receive_IT(huart, rx_buffer, 21);
+}
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -129,13 +159,19 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   SI7021_Init(&hi2c1);
+  HAL_UART_Receive_IT(&huart1, rx_buffer,21);
+  freq=4;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+  /* USER CODE END WHILE */
+
+  /* USER CODE BEGIN 3 */
 	adc_ready = 0;
+	HAL_Delay(60000/freq);
 
 	HAL_ADC_Start_IT(&hadc1);
 	while(!adc_ready){}
@@ -164,12 +200,6 @@ int main(void)
 						convertToLux(light));
 
 	HAL_UART_Transmit(&huart1, tx_buffer, length, 50);
-
-	HAL_Delay(10000);
-  /* USER CODE END WHILE */
-
-  /* USER CODE BEGIN 3 */
-
   }
   /* USER CODE END 3 */
 
