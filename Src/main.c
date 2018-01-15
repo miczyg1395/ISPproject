@@ -43,6 +43,10 @@
 /* USER CODE BEGIN Includes */
 #include "si7021.h"
 #include "crc8.h"
+#include "math.h"
+#define ADC_RESISTANCE	10000.0
+#define B_COEFF	6.7107
+#define M_COEFF -1.2147
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -55,7 +59,9 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 uint8_t temperature[3], humidity[3];
-uint8_t checksum;
+uint16_t light, length;
+uint8_t tx_buffer[50], rx_buffer[50];
+uint8_t checksum, adc_ready;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,7 +73,12 @@ static void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
+{
+	light = HAL_ADC_GetValue(hadc);
+	HAL_ADC_Stop_IT(hadc);
+	adc_ready = 1;
+}
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -111,6 +122,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	adc_ready = 0;
+
+	HAL_ADC_Start_IT(&hadc1);
+	while(!adc_ready){}
+
 	SI7021_Read_Temperature_Hold(temperature, 1);
 	checksum = Crc8_Calculate(temperature, 2, 0);
 
