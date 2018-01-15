@@ -158,6 +158,13 @@ int main(void)
 		checksum = Crc8_Calculate(humidity, 2, 0);
 	}
 
+	length = sprintf((char *) tx_buffer, "Temp:%04.2fHum:%02dLight:%08.2f",
+						convertToCelsius(temperature),
+						convertToRH(humidity),
+						convertToLux(light));
+
+	HAL_UART_Transmit(&huart1, tx_buffer, length, 50);
+
 	HAL_Delay(10000);
   /* USER CODE END WHILE */
 
