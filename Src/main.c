@@ -41,7 +41,8 @@
 #include "stm32f3xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "si7021.h"
+#include "crc8.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -53,7 +54,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+uint8_t temperature[3], humidity[3];
+uint8_t checksum;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,13 +104,32 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
- 
+  SI7021_Init(&hi2c1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	SI7021_Read_Temperature_Hold(temperature, 1);
+	checksum = Crc8_Calculate(temperature, 2, 0);
+
+	while(checksum != temperature[2])
+	{
+		SI7021_Read_Temperature_Hold(temperature, 1);
+		checksum = Crc8_Calculate(temperature, 2, 0);
+	}
+
+	SI7021_Read_Humidity_Hold(humidity, 1);
+	checksum = Crc8_Calculate(humidity, 2, 0);
+
+	while(checksum != humidity[2])
+	{
+		SI7021_Read_Humidity_Hold(humidity, 1);
+		checksum = Crc8_Calculate(humidity, 2, 0);
+	}
+
+	HAL_Delay(10000);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
