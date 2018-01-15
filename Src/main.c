@@ -73,6 +73,19 @@ static void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+float convertToLux(uint16_t adc_value)
+{
+	if(adc_value == 0)
+		return 0.0;
+	static float RLDR, Voltage, lux;
+
+	Voltage = (adc_value * 3.3) / 4095.0;
+	RLDR = (ADC_RESISTANCE * (3.3 - Voltage)) / Voltage;
+
+	lux = pow(10.0, B_COEFF) * pow(RLDR, M_COEFF);
+	return lux;
+}
+
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
 {
 	light = HAL_ADC_GetValue(hadc);
