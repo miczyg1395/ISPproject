@@ -1,5 +1,5 @@
+# storm-iot-node
 IoT node with STM32 MCU and ESP8266
-===================================
 
 This repository contains source code necessary to launch an IoT node with STM32
 microcontroller and a ESP8266 WiFi module. This node is designed to measure
